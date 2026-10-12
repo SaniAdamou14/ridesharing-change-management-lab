@@ -1,0 +1,17 @@
+name: release
+on:
+  push:
+    tags: ["pricing-service-v*", "allocation-service-v*"]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r services/pricing-service/requirements.txt -r services/allocation-service/requirements.txt
+      - run: pytest services/pricing-service/tests -q
+      - run: pytest services/allocation-service/tests -q
+      - run: python scripts/simulate_canary.py
+      - run: python scripts/simulate_rollback.py
+      - run: python scripts/collect_evidence.py

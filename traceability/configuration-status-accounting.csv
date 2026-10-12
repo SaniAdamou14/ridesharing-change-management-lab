@@ -1,0 +1,9 @@
+ci_name,ci_type,version,location,status
+pricing-service source,code,1.1.0,services/pricing-service/app,controlled
+pricing policy,rule,2026.10.1,services/pricing-service/app/config.py,controlled
+VERSION,file,1.1.0,services/pricing-service/VERSION,controlled
+pricing image,artifact,1.1.0,pricing-service:1.1.0,controlled
+pricing deployment,manifest,1.1.0,deploy/kubernetes/base/pricing-deployment.yaml,controlled
+allocation-service source,code,1.0.0,services/allocation-service/app,controlled
+allocation image,artifact,1.0.0,allocation-service:1.0.0,controlled
+pricing contract,contract,1.0.0,contracts/pricing-api.yaml,controlled

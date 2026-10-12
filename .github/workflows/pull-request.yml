@@ -1,0 +1,20 @@
+name: pull-request
+on:
+  pull_request: {branches: [main]}
+  workflow_dispatch: {}
+jobs:
+  change-control:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r services/pricing-service/requirements.txt -r services/allocation-service/requirements.txt ruff
+      - run: ruff format --check services scripts
+      - run: ruff check services scripts
+      - run: pytest services/pricing-service/tests -q --junitxml=reports/evidence/pricing-tests.xml
+      - run: pytest services/allocation-service/tests -q --junitxml=reports/evidence/allocation-tests.xml
+      - run: python scripts/verify_configuration.py
+      - run: python scripts/verify_traceability.py
+      - run: docker build -t pricing-service:ci ./services/pricing-service
+      - run: docker build -t allocation-service:ci ./services/allocation-service

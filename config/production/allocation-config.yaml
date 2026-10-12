@@ -1,0 +1,10 @@
+service: allocation-service
+version: 1.0.0
+environment: production
+reservationTtlSeconds: 30
+resources:
+  requests: {cpu: 200m, memory: 256Mi}
+  limits: {cpu: "1", memory: 1Gi}
+autoscaling:
+  minReplicas: 3
+  maxReplicas: 20

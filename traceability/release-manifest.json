@@ -1,0 +1,16 @@
+{
+  "api_contract_version": "1.0.0",
+  "approval_status": "approved",
+  "change_id": "CR-2026-007",
+  "configuration_version": "1.1.0",
+  "container_digest": "sha256:874f9f66ad1cd47c569faa9e64a8a989d7e71760594d751623d4d06939bdd376",
+  "container_image": "pricing-service:1.1.0",
+  "policy_version": "2026.10.1",
+  "release": "pricing-service-v1.1.0",
+  "rollback_target": "pricing-service-v1.0.0",
+  "security_scan_status": "pending-trivy-not-installed-locally",
+  "service": "pricing-service",
+  "service_version": "1.1.0",
+  "source_commit": "local-feature-branch",
+  "test_status": "passed"
+}

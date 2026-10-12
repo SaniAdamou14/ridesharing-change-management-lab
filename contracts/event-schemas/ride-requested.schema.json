@@ -1,0 +1,1 @@
+{"$schema": "http://json-schema.org/draft-07/schema#", "title": "ride-requested", "type": "object", "required": ["ride_id", "region"], "properties": {"ride_id": {"type": "string"}, "region": {"type": "string"}}}

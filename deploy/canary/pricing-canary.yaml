@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: pricing-service-canary
+  namespace: ridesharing
+spec:
+  replicas: 4
+  strategy:
+    canary:
+      steps: [{setWeight: 10}, {pause: {duration: 5m}}, {setWeight: 50}, {pause: {duration: 10m}}]
+  template:
+    spec:
+      containers:
+        - name: pricing
+          image: pricing-service:1.1.0

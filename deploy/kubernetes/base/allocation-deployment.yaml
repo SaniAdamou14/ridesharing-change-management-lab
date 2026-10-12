@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: allocation-service
+  namespace: ridesharing
+spec:
+  replicas: 3
+  selector:
+    matchLabels: {app: allocation-service}
+  template:
+    metadata:
+      labels: {app: allocation-service, version: 1.0.0}
+    spec:
+      containers:
+        - name: allocation
+          image: allocation-service:1.0.0
+          ports: [{containerPort: 8012}]
+          env:
+            - {name: SERVICE_VERSION, value: "1.0.0"}
+          livenessProbe: {httpGet: {path: /health, port: 8012}, initialDelaySeconds: 10, periodSeconds: 30}
+          readinessProbe: {httpGet: {path: /health, port: 8012}, initialDelaySeconds: 5, periodSeconds: 10}
+          resources:
+            requests: {cpu: 200m, memory: 256Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          securityContext: {runAsNonRoot: true, runAsUser: 10001, readOnlyRootFilesystem: true}

@@ -1,0 +1,7 @@
+name: Bug report
+description: Report a defect
+body:
+  - type: textarea
+    attributes: {label: Symptom}
+  - type: textarea
+    attributes: {label: Expected behaviour}

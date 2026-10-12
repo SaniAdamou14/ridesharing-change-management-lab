@@ -1,0 +1,38 @@
+openapi: 3.0.3
+info:
+  title: pricing-service API
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      responses:
+        '200':
+          description: healthy
+  /version:
+    get:
+      responses:
+        '200':
+          description: version
+  /config:
+    get:
+      responses:
+        '200':
+          description: public config
+  /prices/calculate:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ride_id, distance_km, duration_minutes, demand_index, region]
+              properties:
+                ride_id: {type: string}
+                distance_km: {type: string}
+                duration_minutes: {type: number}
+                demand_index: {type: string}
+                region: {type: string}
+      responses:
+        '200':
+          description: quote

@@ -1,0 +1,1 @@
+{"$schema": "http://json-schema.org/draft-07/schema#", "title": "driver-allocated", "type": "object", "required": ["ride_id", "driver_id"], "properties": {"ride_id": {"type": "string"}, "driver_id": {"type": "string"}}}

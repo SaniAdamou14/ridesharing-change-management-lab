@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricing-service
+  namespace: ridesharing
+spec:
+  replicas: 3
+  selector:
+    matchLabels: {app: pricing-service}
+  template:
+    metadata:
+      labels: {app: pricing-service, version: 1.1.0}
+    spec:
+      containers:
+        - name: pricing
+          image: pricing-service:1.1.0
+          ports: [{containerPort: 8011}]
+          env:
+            - {name: SERVICE_VERSION, value: "1.1.0"}
+            - {name: POLICY_VERSION, value: "2026.10.1"}
+            - {name: MAX_SURGE_MULTIPLIER, value: "3.0"}
+          livenessProbe: {httpGet: {path: /health, port: 8011}, initialDelaySeconds: 10, periodSeconds: 30}
+          readinessProbe: {httpGet: {path: /health, port: 8011}, initialDelaySeconds: 5, periodSeconds: 10}
+          resources:
+            requests: {cpu: 200m, memory: 256Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          securityContext: {runAsNonRoot: true, runAsUser: 10001, readOnlyRootFilesystem: true}

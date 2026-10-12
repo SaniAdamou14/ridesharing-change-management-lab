@@ -1,0 +1,7 @@
+service: allocation-service
+version: 1.0.0
+environment: staging
+reservationTtlSeconds: 30
+resources:
+  requests: {cpu: 100m, memory: 128Mi}
+  limits: {cpu: 500m, memory: 512Mi}

@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: allocation-service API
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      responses:
+        '200':
+          description: healthy
+  /version:
+    get:
+      responses:
+        '200':
+          description: version
+  /drivers/allocate:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ride_id, request_id, passenger_latitude, passenger_longitude]
+              properties:
+                ride_id: {type: string}
+                request_id: {type: string}
+                passenger_latitude: {type: string}
+                passenger_longitude: {type: string}
+      responses:
+        '201':
+          description: allocated
+  /drivers/release:
+    post:
+      responses:
+        '200':
+          description: released
+  /allocations/{ride_id}:
+    get:
+      responses:
+        '200':
+          description: allocation

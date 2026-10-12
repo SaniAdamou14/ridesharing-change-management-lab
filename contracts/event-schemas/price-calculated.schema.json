@@ -1,0 +1,1 @@
+{"$schema": "http://json-schema.org/draft-07/schema#", "title": "price-calculated", "type": "object", "required": ["ride_id", "final_amount", "policy_version"], "properties": {"ride_id": {"type": "string"}, "final_amount": {"type": "string"}, "policy_version": {"type": "string"}}}

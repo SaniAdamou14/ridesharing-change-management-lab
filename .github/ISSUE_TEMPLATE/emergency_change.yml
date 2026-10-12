@@ -1,0 +1,7 @@
+name: Emergency change
+description: Critical hotfix
+body:
+  - type: input
+    attributes: {label: Incident ID}
+  - type: textarea
+    attributes: {label: Containment + rollback}

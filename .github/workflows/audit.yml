@@ -1,0 +1,13 @@
+name: audit
+on:
+  workflow_dispatch: {}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r services/pricing-service/requirements.txt
+      - run: python scripts/verify_configuration.py
+      - run: python scripts/verify_traceability.py

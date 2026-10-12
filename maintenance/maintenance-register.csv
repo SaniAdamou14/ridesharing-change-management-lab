@@ -1,0 +1,9 @@
+maintenance_id,service,issue,maintenance_type,severity,symptom,root_cause,corrective_action,verification,status
+MNT-001,pricing-service,excessive surge multiplier,perfective,medium,unpredictable fares,cap 5.0 too high,cap at 3.0 via CR-2026-007,PRC-05 + canary,closed
+MNT-002,allocation-service,duplicate driver assignment,corrective,critical,double booking,read-before-commit race,atomic reservation + idempotency key,ALC-04/ALC-06 + incident sim,closed
+MNT-003,pricing-service,unsupported map API version,adaptive,high,stale ETA,provider v1 sunset,upgrade provider client + adapter,contract tests,in-progress
+MNT-004,pricing-service,complex pricing rule chain,preventive,medium,hard to audit rules,monolithic fare function,refactor + replay tests,PRC-11 + review,closed
+MNT-005,allocation-service,regional latency increase,perfective,high,slow matching,unbounded candidate scan,bound candidates + index,perf smoke,open
+MNT-006,allocation-service,stale driver location,corrective,high,ghost drivers,missing TTL sweep,TTL + reconciliation worker,ALC-07,closed
+MNT-007,both,outdated base image,preventive,medium,old CVEs,unpinned base,python:3.12-slim + scans,Trivy 0 critical,closed
+MNT-008,notification-service,provider API change,adaptive,medium,failed SMS,new webhook schema,adapter + schema test,contract test,open

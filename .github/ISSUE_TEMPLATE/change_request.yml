@@ -1,0 +1,9 @@
+name: Change request
+description: Propose a controlled change
+body:
+  - type: input
+    attributes: {label: Change ID, placeholder: CR-2026-007}
+  - type: textarea
+    attributes: {label: Business justification}
+  - type: textarea
+    attributes: {label: Rollback plan}
