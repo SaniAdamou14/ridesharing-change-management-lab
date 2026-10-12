@@ -5,16 +5,77 @@ on:
 jobs:
   change-control:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install -r services/pricing-service/requirements.txt -r services/allocation-service/requirements.txt ruff
+      - run: pip install -r services/pricing-service/requirements.txt -r services/allocation-service/requirements.txt ruff pyyaml
       - run: ruff format --check services scripts
       - run: ruff check services scripts
-      - run: pytest services/pricing-service/tests -q --junitxml=reports/evidence/pricing-tests.xml
-      - run: pytest services/allocation-service/tests -q --junitxml=reports/evidence/allocation-tests.xml
+      - run: mkdir -p reports/evidence
+      - run: pytest services/pricing-service/tests -q --junitxml=reports/evidence/pricing-tests.xml --cov-report=json:reports/evidence/coverage-pricing.json
+      - run: pytest services/allocation-service/tests -q --junitxml=reports/evidence/allocation-tests.xml --cov-report=json:reports/evidence/coverage-allocation.json
+      - name: Coverage gate (>=90% stmt, >=85% branch)
+        run: |
+          python - <<'EOF'
+          import json, sys
+          stmts = branches = covered_b = total_b = 0
+          for f in ("reports/evidence/coverage-pricing.json", "reports/evidence/coverage-allocation.json"):
+              t = json.load(open(f))["totals"]
+              stmts += t["num_statements"]; branches += t["num_branches"]; covered_b += t["covered_branches"]
+          import glob
+          cov = 100 * sum(json.load(open(f))["totals"]["covered_lines"] for f in glob.glob("reports/evidence/coverage-*.json")) / stmts
+          br = 100 * covered_b / branches
+          print(f"statement={cov:.1f}% branch={br:.1f}%")
+          sys.exit(0 if (cov >= 90 and br >= 85) else 1)
+          EOF
       - run: python scripts/verify_configuration.py
       - run: python scripts/verify_traceability.py
       - run: docker build -t pricing-service:ci ./services/pricing-service
       - run: docker build -t allocation-service:ci ./services/allocation-service
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: json
+          output: reports/evidence/trivy-filesystem.json
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+      - name: Trivy pricing image scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: pricing-service:ci
+          format: json
+          output: reports/evidence/trivy-pricing-image.json
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+      - name: Trivy allocation image scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: allocation-service:ci
+          format: json
+          output: reports/evidence/trivy-allocation-image.json
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+      - name: SBOM pricing
+        uses: anchore/sbom-action@v0
+        with:
+          image: pricing-service:ci
+          format: spdx-json
+          output-file: reports/evidence/pricing-sbom.spdx.json
+      - name: SBOM allocation
+        uses: anchore/sbom-action@v0
+        with:
+          image: allocation-service:ci
+          format: spdx-json
+          output-file: reports/evidence/allocation-sbom.spdx.json
+      - run: ruff check services scripts > reports/evidence/ruff.txt 2>&1; cat reports/evidence/ruff.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit7-pr-evidence
+          path: reports/evidence/
