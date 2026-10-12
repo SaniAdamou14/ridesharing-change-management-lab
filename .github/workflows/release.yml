@@ -54,6 +54,8 @@ jobs:
         with:
           name: unit7-release-evidence
           path: reports/evidence/
+      - name: Drop zero-byte placeholder (GitHub Releases rejects empty assets)
+        run: rm -f reports/evidence/.gitkeep
       - uses: softprops/action-gh-release@v2
         if: success()
         with:
