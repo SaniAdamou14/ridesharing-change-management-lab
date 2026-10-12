@@ -5,13 +5,57 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install -r services/pricing-service/requirements.txt -r services/allocation-service/requirements.txt
-      - run: pytest services/pricing-service/tests -q
-      - run: pytest services/allocation-service/tests -q
+      - name: Determine service from tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          case "$TAG" in
+            pricing-service-v*) SVC=pricing-service ;;
+            allocation-service-v*) SVC=allocation-service ;;
+            *) echo "unknown tag $TAG"; exit 1 ;;
+          esac
+          echo "SVC=$SVC" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          VER="$(cat "services/$SVC/VERSION")"
+          echo "Tag=$TAG Version=$VER"
+          test "$TAG" = "$SVC-v$VER" || { echo "tag does not match VERSION file"; exit 1; }
+          echo "SVC_VERSION=$VER" >> "$GITHUB_ENV"
+      - run: pip install -r services/pricing-service/requirements.txt -r services/allocation-service/requirements.txt pyyaml
+      - run: mkdir -p reports/evidence
+      - run: pytest services/pricing-service/tests -q --junitxml=reports/evidence/pricing-tests.xml --cov-report=json:reports/evidence/coverage-pricing.json
+      - run: pytest services/allocation-service/tests -q --junitxml=reports/evidence/allocation-tests.xml --cov-report=json:reports/evidence/coverage-allocation.json
+      - run: docker build -t "$SVC:$SVC_VERSION" "./services/$SVC"
+      - run: docker inspect "$SVC:$SVC_VERSION" --format '{{.Id}}' | tee reports/evidence/image-digest.txt
+      - name: Install Trivy and Syft (pinned)
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.75.0
+          curl -sfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v1.54.1
+          trivy --version && syft version
+      - name: Trivy image scan
+        run: trivy image --format json --output reports/evidence/trivy-release-image.json --severity CRITICAL,HIGH "$SVC:$SVC_VERSION"
+      - name: SBOM
+        run: syft "$SVC:$SVC_VERSION" -o spdx-json=reports/evidence/release-sbom.spdx.json
+      - run: python scripts/verify_configuration.py
+      - run: python scripts/verify_traceability.py
+      - run: python scripts/smoke_test.py
       - run: python scripts/simulate_canary.py
       - run: python scripts/simulate_rollback.py
       - run: python scripts/collect_evidence.py
+      - run: cp traceability/release-manifest.json reports/evidence/release-manifest.json
+      - run: cp traceability/traceability-matrix.csv reports/evidence/traceability-matrix.csv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit7-release-evidence
+          path: reports/evidence/
+      - uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          files: reports/evidence/*
+          body: "Controlled release ${{ env.TAG }} for CR-2026-007. See unit7-release-evidence artifact."

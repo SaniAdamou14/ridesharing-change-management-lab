@@ -9,5 +9,12 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install -r services/pricing-service/requirements.txt
+      - run: mkdir -p reports/evidence
       - run: python scripts/verify_configuration.py
       - run: python scripts/verify_traceability.py
+      - run: python scripts/collect_evidence.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit7-audit-evidence
+          path: reports/evidence/
