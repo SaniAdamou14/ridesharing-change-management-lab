@@ -33,7 +33,7 @@ jobs:
       - run: docker build -t "$SVC:$SVC_VERSION" "./services/$SVC"
       - run: docker inspect "$SVC:$SVC_VERSION" --format '{{.Id}}' | tee reports/evidence/image-digest.txt
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.30.0
         with:
           image-ref: "${{ env.SVC }}:${{ env.SVC_VERSION }}"
           format: json
