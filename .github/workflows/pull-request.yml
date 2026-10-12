@@ -36,43 +36,21 @@ jobs:
       - run: python scripts/verify_traceability.py
       - run: docker build -t pricing-service:ci ./services/pricing-service
       - run: docker build -t allocation-service:ci ./services/allocation-service
+      - name: Install Trivy and Syft (pinned)
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.75.0
+          curl -sfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v1.54.1
+          trivy --version && syft version
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@v0.30.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: json
-          output: reports/evidence/trivy-filesystem.json
-          severity: CRITICAL,HIGH
-          exit-code: "0"
+        run: trivy fs --format json --output reports/evidence/trivy-filesystem.json --severity CRITICAL,HIGH .
       - name: Trivy pricing image scan
-        uses: aquasecurity/trivy-action@v0.30.0
-        with:
-          image-ref: pricing-service:ci
-          format: json
-          output: reports/evidence/trivy-pricing-image.json
-          severity: CRITICAL,HIGH
-          exit-code: "0"
+        run: trivy image --format json --output reports/evidence/trivy-pricing-image.json --severity CRITICAL,HIGH pricing-service:ci
       - name: Trivy allocation image scan
-        uses: aquasecurity/trivy-action@v0.30.0
-        with:
-          image-ref: allocation-service:ci
-          format: json
-          output: reports/evidence/trivy-allocation-image.json
-          severity: CRITICAL,HIGH
-          exit-code: "0"
+        run: trivy image --format json --output reports/evidence/trivy-allocation-image.json --severity CRITICAL,HIGH allocation-service:ci
       - name: SBOM pricing
-        uses: anchore/sbom-action@v0
-        with:
-          image: pricing-service:ci
-          format: spdx-json
-          output-file: reports/evidence/pricing-sbom.spdx.json
+        run: syft pricing-service:ci -o spdx-json=reports/evidence/pricing-sbom.spdx.json
       - name: SBOM allocation
-        uses: anchore/sbom-action@v0
-        with:
-          image: allocation-service:ci
-          format: spdx-json
-          output-file: reports/evidence/allocation-sbom.spdx.json
+        run: syft allocation-service:ci -o spdx-json=reports/evidence/allocation-sbom.spdx.json
       - run: ruff check services scripts > reports/evidence/ruff.txt 2>&1; cat reports/evidence/ruff.txt
       - uses: actions/upload-artifact@v4
         if: always()
